@@ -1,11 +1,18 @@
 package com.aonions.opengl
 
-import androidx.appcompat.app.AppCompatActivity
-import android.os.Bundle
+import android.util.Log
+import com.aonions.opengl.databinding.ActivityMainBinding
+import com.aonions.opengl.jni.MainApp
 
-class MainActivity : AppCompatActivity() {
-    override fun onCreate(savedInstanceState: Bundle?) {
-        super.onCreate(savedInstanceState)
-        setContentView(R.layout.activity_main)
+class MainActivity : BaseActivity<ActivityMainBinding>() {
+
+    companion object {
+        private const val TAG = "MainActivity"
+    }
+
+    override fun setBinding(): ActivityMainBinding = ActivityMainBinding.inflate(layoutInflater)
+
+    override fun initData() {
+        getBinding().name.text = MainApp.test()
     }
 }
