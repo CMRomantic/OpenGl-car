@@ -15,22 +15,22 @@
  */
 
 #include "jni.h"
-#include "car_log.h"
+#include "LogUtils.h"
 
-#ifdef CAR_LOG_TAG
-#undef CAR_LOG_TAG
-#endif //CAR_LOG_TAG
-#define CAR_LOG_TAG  "JNIOnload"
+#ifdef LOG_UTILS_TAG
+#undef LOG_UTILS_TAG
+#endif //LOG_UTILS_TAG
+#define LOG_UTILS_TAG  "JNIOnload"
 
 namespace android {
 	int register_MainApp(JNIEnv* env);
-};
+}
 
 using namespace android;
 
 extern "C" jint JNI_OnLoad(JavaVM* vm, void* /* reserved */)
 {
-    JNIEnv* env = NULL;
+    JNIEnv* env = nullptr;
     jint result = -1;
 
     if (vm->GetEnv((void**) &env, JNI_VERSION_1_4) != JNI_OK) {

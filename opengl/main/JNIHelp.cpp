@@ -7,19 +7,19 @@
 
 #include "jni.h"
 #include "JNIHelp.h"
-#include "car_log.h"
+#include "LogUtils.h"
 
-#include <stdio.h>
-#include <stdlib.h>
-#include <string.h>
-#include <assert.h>
+#include <cstdio>
+#include <cstdlib>
+#include <cstring>
+#include <cassert>
 
 #include <string>
 
-#ifdef CAR_LOG_TAG
-#undef CAR_LOG_TAG
-#endif //CAR_LOG_TAG
-#define CAR_LOG_TAG  "JNIOnload"
+#ifdef LOG_UTILS_TAG
+#undef LOG_UTILS_TAG
+#endif //LOG_UTILS_TAG
+#define LOG_UTILS_TAG  "JNIOnload"
 
 extern "C" int jniRegisterNativeMethods(JNIEnv* env, const char* className,
     const JNINativeMethod* gMethods, int numMethods)
@@ -31,7 +31,7 @@ extern "C" int jniRegisterNativeMethods(JNIEnv* env, const char* className,
         env->ExceptionDescribe();
         env->ExceptionClear();
     }
-    if (clazz == NULL) {
+    if (clazz == nullptr) {
         LOGE("Native registration unable to find class '%s'", className);
         return JNI_FALSE;
     }

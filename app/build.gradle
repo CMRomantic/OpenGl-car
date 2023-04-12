@@ -16,9 +16,13 @@ android {
 
         testInstrumentationRunner "androidx.test.runner.AndroidJUnitRunner"
 
-        ndk {
-            abiFilters "armeabi-v7a"
+        externalNativeBuild {
+            cmake {
+                cppFlags ''
+                abiFilters "armeabi-v7a" , "arm64-v8a"
+            }
         }
+
     }
 
     buildFeatures {
@@ -39,6 +43,13 @@ android {
 
     kotlinOptions {
         jvmTarget = '1.8'
+    }
+
+    externalNativeBuild {
+        cmake {
+            path file('../opengl/CMakeLists.txt')
+            version '3.10.2'
+        }
     }
 }
 
