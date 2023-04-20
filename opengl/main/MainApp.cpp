@@ -1,5 +1,5 @@
 #include "jni.h"
-#include "LogUtils.h"
+#include "config.h"
 #include "JNIHelp.h"
 
 #ifdef CAR_LOG_TAG

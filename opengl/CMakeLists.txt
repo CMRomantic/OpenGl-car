@@ -14,6 +14,7 @@ set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -std=c++11 -Wall")
 # Gradle automatically packages shared libraries with your APK.
 
 file(GLOB SRC_LIST "main/*.cpp")
+file(GLOB SRC_MAIN_LIST "main/src/*.cpp")
 
 add_library( # Sets the name of the library.
         aonions
@@ -22,7 +23,8 @@ add_library( # Sets the name of the library.
         SHARED
 
         # Provides a relative path to your source file(s).
-        ${SRC_LIST})
+        ${SRC_LIST}
+        ${SRC_MAIN_LIST})
 
 # Searches for a specified prebuilt library and stores the path as a
 # variable. Because CMake includes system libraries in the search path by
@@ -41,4 +43,6 @@ target_link_libraries( # Specifies the target library.
         # Links the target library to the log library
         # included in the NDK.
         android
-        log)
+        log
+        EGL
+        GLESv3)
