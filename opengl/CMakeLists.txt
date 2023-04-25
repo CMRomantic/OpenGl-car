@@ -16,6 +16,12 @@ set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -std=c++11 -Wall")
 file(GLOB SRC_LIST "main/*.cpp")
 file(GLOB SRC_MAIN_LIST "main/src/*.cpp")
 
+include_directories(
+        ${CMAKE_SOURCE_DIR}/main/include
+        ${CMAKE_SOURCE_DIR}/main/include/common
+        ${CMAKE_SOURCE_DIR}/main/include/glm
+)
+
 add_library( # Sets the name of the library.
         aonions
 

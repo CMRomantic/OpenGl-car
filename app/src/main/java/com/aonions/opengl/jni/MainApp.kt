@@ -9,5 +9,13 @@ object MainApp {
         System.loadLibrary("aonions")
     }
 
-    external fun test(): String
+    external fun initGl()
+
+    external fun onSurfaceCreated()
+
+    external fun onSurfaceChanged(width: Int, height:Int)
+
+    external fun onDrawFrame()
+
+    external fun onDestroy()
 }
