@@ -21,20 +21,21 @@ void GLRender::OnSurfaceCreated() {
 void GLRender::OnSurfaceChanged(int width, int height) {
     LOGE("OnSurfaceChanged, width:%d, height:%d", width, height);
     glViewport(0, 0, width, height);
+    GLUtils::initGl();
 }
 
-void GLRender::OnDrawFrame() {
+void GLRender::beforeDraw() {
     if (programObj != 0) {
         return;
     }
     //0.初始化顶点数据
     GLfloat vertices[] = {
-            0.0f, 0.5f, 0.0f, 1.0f, 0.0f, 0.0f,
-            -0.5f, -0.5f, 0.0f, 0.0f, 1.0f, 0.0f,
-            0.5f, -0.5f, 0.0f, 0.0f, 0.0f, 1.0f
+            0.0f, 0.5f, 0.0f,1.0f,0.0f,0.0f,
+            -0.5f,-0.5f, 0.0f,0.0f,1.0f,0.0f,
+            0.5f, -0.5f, 0.0f,0.0f,0.0f,1.0f
     };
     //1.创建着色器程序，此处将着色器程序创建封装到一个工具类中
-    char vShaderStr[] =
+    vShaderStr =
             "#version 300 es                          \n"
             "layout(location = 0) in vec4 vPosition;  \n"
             "layout(location = 1) in vec3 vColor;  \n"
@@ -45,7 +46,7 @@ void GLRender::OnDrawFrame() {
             "   color = vColor;              \n"
             "}                                        \n";
 
-    char fShaderStr[] =
+    fShaderStr =
             "#version 300 es                              \n"
             "precision mediump float;                     \n"
             "in vec3 color;                          \n"
@@ -77,7 +78,8 @@ void GLRender::OnDrawFrame() {
     glBindVertexArray(GL_NONE);
 }
 
-void GLRender::beforeDraw() {
+void GLRender::OnDrawFrame() {
+    beforeDraw();
     if (programObj == 0) {
         return;
     }

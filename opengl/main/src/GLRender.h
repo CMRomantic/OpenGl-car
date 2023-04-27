@@ -11,7 +11,8 @@
 
 class GLRender {
     GLRender() {
-
+        programObj = GL_NONE;
+        VAO = GL_NONE;
     };
 
     ~GLRender() {
@@ -19,8 +20,21 @@ class GLRender {
             delete context;
             context = nullptr;
         }
+        if (vShaderStr != nullptr) {
+            delete vShaderStr;
+            vShaderStr = nullptr;
+        }
+        if (fShaderStr != nullptr) {
+            delete fShaderStr;
+            fShaderStr = nullptr;
+        }
     };
 public:
+    void init(const char *vShader, const char *fShader) {
+        this->vShaderStr = vShader;
+        this->fShaderStr = fShader;
+    }
+
     static void OnSurfaceCreated();
 
     static void OnSurfaceChanged(int width, int height);
@@ -35,8 +49,8 @@ public:
 
 private:
     static GLRender *context;
-    int mScreenWidth;
-    int mScreenHeight;
+    const char *vShaderStr;
+    const char *fShaderStr;
     GLuint programObj;
     GLuint VAO;
 };

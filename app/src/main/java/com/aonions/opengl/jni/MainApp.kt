@@ -9,7 +9,7 @@ object MainApp {
         System.loadLibrary("aonions")
     }
 
-    external fun initGl()
+    external fun test():String
 
     external fun onSurfaceCreated()
 

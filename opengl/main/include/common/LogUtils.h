@@ -27,12 +27,12 @@
 #define LOGW CarLogW
 
 #define FUN_BEGIN_TIME(FUN) {\
-    LOGI("%s:%s func start", __FILE__, FUN); \
+    LOGI("%s func start", FUN); \
     long long t0 = getSysCurrentTime();
 
 #define FUN_END_TIME(FUN) \
     long long t1 = getSysCurrentTime(); \
-    LOGI("%s:%s func cost time %ldms", __FILE__, FUN, (long)(t1-t0));}
+    LOGI("%s func cost time %ldms", FUN, (long)(t1-t0));}
 
 #define BEGIN_TIME(FUN) {\
     LOGI("%s func start", FUN); \

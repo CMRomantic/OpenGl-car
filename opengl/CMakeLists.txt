@@ -15,11 +15,13 @@ set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -std=c++11 -Wall")
 
 file(GLOB SRC_LIST "main/*.cpp")
 file(GLOB SRC_MAIN_LIST "main/src/*.cpp")
+file(GLOB SRC_UTILS_LIST "main/utils/*.cpp")
 
 include_directories(
         ${CMAKE_SOURCE_DIR}/main/include
         ${CMAKE_SOURCE_DIR}/main/include/common
         ${CMAKE_SOURCE_DIR}/main/include/glm
+        ${CMAKE_SOURCE_DIR}/main/utils
 )
 
 add_library( # Sets the name of the library.
@@ -30,7 +32,8 @@ add_library( # Sets the name of the library.
 
         # Provides a relative path to your source file(s).
         ${SRC_LIST}
-        ${SRC_MAIN_LIST})
+        ${SRC_MAIN_LIST}
+        ${SRC_UTILS_LIST})
 
 # Searches for a specified prebuilt library and stores the path as a
 # variable. Because CMake includes system libraries in the search path by

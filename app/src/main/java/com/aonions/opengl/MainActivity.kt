@@ -16,8 +16,8 @@ class MainActivity : BaseActivity<ActivityMainBinding>() {
     override fun setBinding(): ActivityMainBinding = ActivityMainBinding.inflate(layoutInflater)
 
     override fun initData() {
+//        Log.d(TAG, MainApp.test())
         getBinding().glSurface.setRender(glRender)
-        MainApp.initGl()
     }
 
     override fun onDestroy() {

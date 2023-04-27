@@ -19,11 +19,11 @@ void GLUtils::initGl() {
     printGLString("Extensions", GL_EXTENSIONS);
 
     //glShadeModel(GL_SMOOTH);// 启用阴影平滑
-    glClearColor(0.0f, 0.0f, 0.0f, 0.0f);// 黑色背景
-    glClearDepthf(1.0f);// 设置深度缓存
-    glEnable(GL_DEPTH_TEST);// 启用深度测试
-    glDepthFunc(GL_LEQUAL);// 所作深度测试的类型
-    glHint(GL_PERSPECTIVE_CORRECTION_HINT, GL_NICEST);// 告诉系统对透视进行修正
+//    glClearColor(0.0f, 0.0f, 0.0f, 0.0f);// 黑色背景
+//    glClearDepthf(1.0f);// 设置深度缓存
+//    glEnable(GL_DEPTH_TEST);// 启用深度测试
+//    glDepthFunc(GL_LEQUAL);// 所作深度测试的类型
+//    glHint(GL_PERSPECTIVE_CORRECTION_HINT, GL_NICEST);// 告诉系统对透视进行修正
 }
 
 GLuint GLUtils::loadShader(GLenum shaderType, const char *pSource) {
