@@ -1,7 +1,8 @@
 //
 // Created by cmeng on 2023/4/26.
 //
-
+#include "jni.h"
+#include <android/asset_manager_jni.h>
 #include <cstdio>
 #include <string>
 #include <fstream>
@@ -31,6 +32,26 @@ public:
         fclose(p);
         return (int) ret;
     };
+
+    static char *readFileAsset(const char *file, AAssetManager *manager) {
+        AAsset *pAsset = nullptr;
+        char *pBuffer = nullptr;
+        off_t size = -1;
+
+        if (manager == nullptr) {
+            LOGE("AAssetManager is null!");
+            return nullptr;
+        }
+        pAsset = AAssetManager_open(manager, file, AASSET_MODE_UNKNOWN);
+
+        size = AAsset_getLength(pAsset);
+        LOGI("after AAssetManager_open");
+        pBuffer = (char *) malloc(size + 1);
+        pBuffer[size] = '\0';
+        AAsset_read(pAsset, pBuffer, size);
+        AAsset_close(pAsset);
+        return pBuffer;
+    }
 
     static string readFile(const char *filename) {
         std::string content;

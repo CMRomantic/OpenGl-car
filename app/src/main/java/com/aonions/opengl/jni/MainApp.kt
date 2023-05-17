@@ -1,5 +1,7 @@
 package com.aonions.opengl.jni
 
+import android.content.res.AssetManager
+
 /**
  * Created by cmm on 2023/4/11.
  */
@@ -9,7 +11,7 @@ object MainApp {
         System.loadLibrary("aonions")
     }
 
-    external fun test():String
+    external fun test(assets: AssetManager):String
 
     external fun onSurfaceCreated()
 

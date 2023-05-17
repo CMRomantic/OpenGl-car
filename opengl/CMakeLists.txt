@@ -18,6 +18,7 @@ file(GLOB SRC_MAIN_LIST "main/src/*.cpp")
 file(GLOB SRC_UTILS_LIST "main/utils/*.cpp")
 
 include_directories(
+        ${CMAKE_SOURCE_DIR}/main/glsl/triangle
         ${CMAKE_SOURCE_DIR}/main/include
         ${CMAKE_SOURCE_DIR}/main/include/common
         ${CMAKE_SOURCE_DIR}/main/include/glm

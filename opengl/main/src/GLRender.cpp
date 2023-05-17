@@ -35,28 +35,34 @@ void GLRender::beforeDraw() {
             0.5f, -0.5f, 0.0f,0.0f,0.0f,1.0f
     };
     //1.创建着色器程序，此处将着色器程序创建封装到一个工具类中
-    vShaderStr =
-            "#version 300 es                          \n"
-            "layout(location = 0) in vec4 vPosition;  \n"
-            "layout(location = 1) in vec3 vColor;  \n"
-            "out vec3 color;  \n"
-            "void main()                              \n"
-            "{                                        \n"
-            "   gl_Position = vPosition;              \n"
-            "   color = vColor;              \n"
-            "}                                        \n";
-
-    fShaderStr =
-            "#version 300 es                              \n"
-            "precision mediump float;                     \n"
-            "in vec3 color;                          \n"
-            "out vec4 fragColor;                          \n"
-            "void main()                                  \n"
-            "{                                            \n"
-            "   fragColor = vec4 (color, 1.0 );  \n"
-            "}                                            \n";
+//    vShaderStr =
+//            "#version 300 es                          \n"
+//            "layout(location = 0) in vec4 vPosition;  \n"
+//            "layout(location = 1) in vec3 vColor;  \n"
+//            "out vec3 color;  \n"
+//            "void main()                              \n"
+//            "{                                        \n"
+//            "   gl_Position = vPosition;              \n"
+//            "   color = vColor;              \n"
+//            "}                                        \n";
+//
+//    fShaderStr =
+//            "#version 300 es                              \n"
+//            "precision mediump float;                     \n"
+//            "in vec3 color;                          \n"
+//            "out vec4 fragColor;                          \n"
+//            "void main()                                  \n"
+//            "{                                            \n"
+//            "   fragColor = vec4 (color, 1.0 );  \n"
+//            "}                                            \n";
 
     programObj = GLUtils::createProgram(vShaderStr, fShaderStr);
+
+//    glUseProgram(programObj);
+//
+//    glVertexAttribPointer (0,3,GL_FLOAT, GL_FALSE,0,vertices);
+//    glEnableVertexAttribArray(0);
+//    glDrawArrays (GL_TRIANGLES, 0, 3);
 
     //2.生成VAO,VBO对象,并绑定顶点属性
     GLuint VBO;

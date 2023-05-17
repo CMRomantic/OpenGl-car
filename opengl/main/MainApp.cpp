@@ -4,6 +4,7 @@
 #include "src/GLUtils.h"
 #include "src/GLRender.h"
 #include "FileUtils.cpp"
+#include "unordered_map"
 
 #ifdef CAR_LOG_TAG
 #undef CAR_LOG_TAG
@@ -13,26 +14,19 @@
 #define APP_PACKAGE_CLASS_NAME "com/aonions/opengl/jni/MainApp"
 #define GLSL_TRIANGLE_V_SHADER "sdcard/glsl/triangle/vShader.glsl"
 #define GLSL_TRIANGLE_F_SHADER "sdcard/glsl/triangle/fShader.glsl"
+#define GLSL_V_SHADER_PATH  "circle/vShader.glsl"
+#define GLSL_F_SHADER_PATH  "circle/fShader.glsl"
+
+AAssetManager* manager = nullptr;
 
 namespace android {
 
-    jstring test(JNIEnv *env, jclass type){
-
-        std::string folder_path = "sdcard/glsl/triangle/vShader.glsl";
-
-        std::string filename = std::string("main/glsl/triangle") + "/vShader.glsl";
-
-        std::string content = FileUtils::readFile(folder_path.c_str());
-
-//        static const int BUF_SZ = 1024;
-//        char vData[BUF_SZ + 1] = {0};
-//
-//        FileUtils::readFile(folder_path.c_str(),vData, BUF_SZ);
-
-        LOGD("read buffer:\n%s",content.c_str());
-
-
-        return env->NewStringUTF(folder_path.c_str());
+    jstring test(JNIEnv *env, jclass type, jobject assetManager) {
+        manager = AAssetManager_fromJava(env, assetManager);
+        if (manager == nullptr) {
+            return env->NewStringUTF("assetManager is null.");
+        }
+        return env->NewStringUTF("222");
     }
 
     void onSurfaceCreated(JNIEnv *env, jclass type) {
@@ -42,10 +36,15 @@ namespace android {
 //        char fData[BUF_SZ + 1] = {0};
 //        FileUtils::readFile(GLSL_TRIANGLE_V_SHADER, vData, BUF_SZ);
 //        FileUtils::readFile(GLSL_TRIANGLE_F_SHADER, fData, BUF_SZ);
-        std::string vData = FileUtils::readFile(GLSL_TRIANGLE_V_SHADER);
-        std::string fData = FileUtils::readFile(GLSL_TRIANGLE_F_SHADER);
-        //LOGD("read buffer:\n%s",vData.c_str());
-        GLRender::getInstance()->init(vData.c_str(), fData.c_str());
+//        std::string vData = FileUtils::readFile(GLSL_TRIANGLE_V_SHADER);
+//        std::string fData = FileUtils::readFile(GLSL_TRIANGLE_F_SHADER);
+
+        char * vData = FileUtils::readFileAsset(GLSL_V_SHADER_PATH,manager);
+        char * fData = FileUtils::readFileAsset(GLSL_F_SHADER_PATH, manager);
+//
+        LOGD("read buffer:\n%s",vData);
+//
+        GLRender::getInstance()->init(vData, fData);
     }
 
     void onSurfaceChanged(JNIEnv *env, jclass type, jint width, jint height) {
@@ -63,11 +62,11 @@ namespace android {
     //------------------------------------jni loaded----------------------------------------------------------
 
     static const JNINativeMethod methodsRx[] = {
-            {"test",             "()Ljava/lang/String;", (void *) test},
-            {"onSurfaceCreated", "()V",   (void *) onSurfaceCreated},
-            {"onSurfaceChanged", "(II)V", (void *) onSurfaceChanged},
-            {"onDrawFrame",      "()V",   (void *) onDrawFrame},
-            {"onDestroy",        "()V",   (void *) onDestroy},
+            {"test",             "(Landroid/content/res/AssetManager;)Ljava/lang/String;", (void *) test},
+            {"onSurfaceCreated", "()V",                                                    (void *) onSurfaceCreated},
+            {"onSurfaceChanged", "(II)V",                                                  (void *) onSurfaceChanged},
+            {"onDrawFrame",      "()V",                                                    (void *) onDrawFrame},
+            {"onDestroy",        "()V",                                                    (void *) onDestroy},
     };
 
     int register_MainApp(JNIEnv *env) {
