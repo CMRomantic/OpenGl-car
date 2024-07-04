@@ -14,5 +14,5 @@ cmake \
     ..
 
 
-make VERBOSE=1
+make -j4
 

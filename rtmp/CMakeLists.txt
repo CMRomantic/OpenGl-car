@@ -9,10 +9,10 @@ set(libname unisound-stream)
 # ffmpeg lib include	start
 include_directories(
         include
-        ${libffmpeg}/include
+        ${libffmpeg}/${ANDROID_ABI}/include
 )
 link_directories(
-        ${libffmpeg}/libs)
+        ${libffmpeg}/${ANDROID_ABI}/lib)
 # ffmpeg lib include	end
 
 # libyuv lib include	start
@@ -22,7 +22,7 @@ include_directories(
 )
 
 link_directories(
-        ${libyuv}/libs)
+        ${libyuv}/${ANDROID_ABI})
 # libyuv lib include	end
 
 file(GLOB_RECURSE ALL_SOURCE "cpp/*.cpp" "cpp/*.h")
@@ -52,7 +52,9 @@ set(yuv-libs
 set(native-libs
 
         android
-        log)
+        log
+        m
+        z)
 
 target_link_libraries( # Specifies the target library.
         ${libname}

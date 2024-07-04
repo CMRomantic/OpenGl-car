@@ -3,6 +3,8 @@
 #include "logger.h"
 #include "h264_publish.h"
 
+#define AV_CODEC_FLAG_GLOBAL_HEADER   (1 << 22)
+
 void H264Publisher::InitPublish(const char *outputPath, int width, int height) {
     this->outputPath = outputPath;
     this->width = width;
@@ -116,9 +118,20 @@ void H264Publisher::StartPublish() {
     pCodecCtx->refs = 1;
     pCodecCtx->qcompress = 0.6;
 
-    if (out_fmt->oformat->flags & AVFMT_GLOBALHEADER) {
-        pCodecCtx->flags |= CODEC_FLAG_GLOBAL_HEADER;
-    }
+    /*if (out_fmt->oformat->flags & AVFMT_GLOBALHEADER) {
+        pCodecCtx->flags |= AV_CODEC_FLAG_GLOBAL_HEADER;
+    }*/
+
+    // Print codec context parameters for debugging
+    LOGE("Codec Parameters:");
+    LOGE("width: %d", pCodecCtx->width);
+    LOGE("height: %d", pCodecCtx->height);
+    LOGE("framerate: %d/%d", pCodecCtx->framerate.num, pCodecCtx->framerate.den);
+    LOGE("time_base: %d/%d", pCodecCtx->time_base.num, pCodecCtx->time_base.den);
+    LOGE("gop_size: %d", pCodecCtx->gop_size);
+    LOGE("max_b_frames: %d", pCodecCtx->max_b_frames);
+    LOGE("bit_rate: %lld", (long long)pCodecCtx->bit_rate);
+    LOGE("pix_fmt: %d", pCodecCtx->pix_fmt);
 
     //H.264
     AVDictionary *opts = NULL;
@@ -129,7 +142,9 @@ void H264Publisher::StartPublish() {
     //6. 打开编码器
     int result = avcodec_open2(pCodecCtx, pCodec, &opts);
     if (result < 0) {
-        LOGE("open encoder failed %d", result);
+        char errbuf[128];
+        av_strerror(result, errbuf, sizeof(errbuf));
+        LOGE("open encoder failed %s", errbuf);
         return;
     }
 

@@ -47,7 +47,8 @@ android {
 
     externalNativeBuild {
         cmake {
-            path file('../opengl/CMakeLists.txt')
+            //path file('../opengl/CMakeLists.txt')
+            path file('../rtmp/CMakeLists.txt')
             version '3.10.2'
         }
     }
