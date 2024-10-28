@@ -3,8 +3,6 @@
 #include "logger.h"
 #include "h264_publish.h"
 
-#define AV_CODEC_FLAG_GLOBAL_HEADER   (1 << 22)
-
 void H264Publisher::InitPublish(const char *outputPath, int width, int height) {
     this->outputPath = outputPath;
     this->width = width;
@@ -34,40 +32,10 @@ int H264Publisher::EncodeFrame(AVCodecContext *pCodecCtx, AVFrame *pFrame, AVPac
         avPacket->duration = av_rescale_q(avPacket->duration, pCodecCtx->time_base, pStream->time_base);
         avPacket->stream_index = pStream->index;
 
-        /*LOGI("Send frame index:%d, pts:%lld, dts:%lld, duration:%lld, time_base:%d/%d",
-             index,
-             (long long)avPacket->pts,
-             (long long)avPacket->dts,
-             (long long)avPacket->duration,
-             pStream->time_base.num, pStream->time_base.den);*/
-
         ret = av_interleaved_write_frame(out_fmt, avPacket);
         if (ret < 0) {
             LOGE("av_interleaved_write_frame failed: %s", av_err2str(ret));
-            if (ret == AVERROR(EPIPE)) {
-                // Close existing connection
-                avio_close(out_fmt->pb);
-
-                // Re-open the connection
-                if (avio_open(&out_fmt->pb, outputPath, AVIO_FLAG_READ_WRITE) < 0) {
-                    LOGE("Failed to re-open output file!\n");
-                    return -1;
-                }
-                
-                // Write file header again
-                int result = avformat_write_header(out_fmt, NULL);
-                if (result < 0) {
-                    LOGE("Error occurred when re-opening output URL %d", result);
-                    return -1;
-                }
-
-                // Retry sending the packet after reconnect
-                ret = av_interleaved_write_frame(out_fmt, avPacket);
-                if (ret != 0) {
-                    LOGE("Retry av_interleaved_write_frame failed: %s", av_err2str(ret));
-                    return -1;
-                }
-            }
+            StopPublish();
         }
 
         av_packet_unref(avPacket);
@@ -77,6 +45,10 @@ int H264Publisher::EncodeFrame(AVCodecContext *pCodecCtx, AVFrame *pFrame, AVPac
 }
 
 void H264Publisher::StartPublish() {
+    if (this -> transform){
+        LOGE("start rtmp have opened.");
+        return;
+    }
 
     //1.注册所有组件
     av_register_all();
@@ -111,9 +83,10 @@ void H264Publisher::StartPublish() {
     pCodecCtx->time_base = (AVRational) {1, fps};// 设置时间基准，这里表示帧率为30fps
     pCodecCtx->gop_size = 30;// 设置关键帧间隔
     pCodecCtx->max_b_frames = 0;// 设置最大B帧数量
+    pCodecCtx->bit_rate = 100 * 1024 * 8;// 设置比特率
+
     pCodecCtx->qmin = 10;
     pCodecCtx->qmax = 50;
-    pCodecCtx->bit_rate = 100 * 1024 * 8;// 设置比特率
     pCodecCtx->level = 41;
     pCodecCtx->refs = 1;
     pCodecCtx->qcompress = 0.6;
@@ -123,15 +96,15 @@ void H264Publisher::StartPublish() {
     }*/
 
     // Print codec context parameters for debugging
-    LOGE("Codec Parameters:");
-    LOGE("width: %d", pCodecCtx->width);
-    LOGE("height: %d", pCodecCtx->height);
-    LOGE("framerate: %d/%d", pCodecCtx->framerate.num, pCodecCtx->framerate.den);
-    LOGE("time_base: %d/%d", pCodecCtx->time_base.num, pCodecCtx->time_base.den);
-    LOGE("gop_size: %d", pCodecCtx->gop_size);
-    LOGE("max_b_frames: %d", pCodecCtx->max_b_frames);
-    LOGE("bit_rate: %lld", (long long)pCodecCtx->bit_rate);
-    LOGE("pix_fmt: %d", pCodecCtx->pix_fmt);
+    LOGI("Codec Parameters:");
+    LOGI("width: %d", pCodecCtx->width);
+    LOGI("height: %d", pCodecCtx->height);
+    LOGI("framerate: %d/%d", pCodecCtx->framerate.num, pCodecCtx->framerate.den);
+    LOGI("time_base: %d/%d", pCodecCtx->time_base.num, pCodecCtx->time_base.den);
+    LOGI("gop_size: %d", pCodecCtx->gop_size);
+    LOGI("max_b_frames: %d", pCodecCtx->max_b_frames);
+    LOGI("bit_rate: %lld", (long long)pCodecCtx->bit_rate);
+    LOGI("pix_fmt: %d", pCodecCtx->pix_fmt);
 
     //H.264
     AVDictionary *opts = NULL;
@@ -139,7 +112,7 @@ void H264Publisher::StartPublish() {
         av_dict_set(&opts, "preset", "superfast", 0);
         av_dict_set(&opts, "tune", "zerolatency", 0);
     }
-    //6. 打开编码器
+    //6. 打开编码器Failed to open output fileFailed to open output file
     int result = avcodec_open2(pCodecCtx, pCodec, &opts);
     if (result < 0) {
         char errbuf[128];
