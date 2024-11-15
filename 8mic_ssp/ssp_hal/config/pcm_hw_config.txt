@@ -1,0 +1,11 @@
+pcm_card 1
+pcm_device 0
+i2s_bits 32
+linear_4mic 0
+no_vad 0
+high_priority 1
+raw_pcm 1
+mic_array_rw_path /sdcard
+aec_enlarge_4mic 2
+debug_file_path /sdcard/unidata/
+save_file_on 1
