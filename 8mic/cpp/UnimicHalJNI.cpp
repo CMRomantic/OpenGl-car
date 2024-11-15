@@ -3,6 +3,10 @@
 #include <android/log.h>
 #include <string.h>
 #include "uni_4mic_hal.h"
+#include "tinyalsa/asoundlib.h"
+#include <iostream>
+#include <thread>
+#include <fstream>
 #define LOG_TAG    "UnimicJni"
 #define LOGD(...)  __android_log_print(ANDROID_LOG_DEBUG, LOG_TAG, __VA_ARGS__)
 #define LOGI(...)  __android_log_print(ANDROID_LOG_INFO, LOG_TAG, __VA_ARGS__)
@@ -203,5 +207,60 @@ Java_com_unisound_mic_UniMicHalJNI_releaseHal(JNIEnv *env, jobject thiz){
         cur_thiz = NULL;
     }
     return uni_4mic_hal_release();
+}
+
+static struct pcm *pcm = nullptr;
+static bool isRecording = false;
+
+extern "C" JNIEXPORT void JNICALL
+Java_com_unisound_mic_UniMicHalJNI_testTiny(JNIEnv *env, jobject thiz){
+    struct pcm_config config;
+    config.channels = 10;
+    config.rate = 16000;
+    config.period_size = 1024;
+    config.period_count = 4;
+    config.format = PCM_FORMAT_S16_LE;
+    config.start_threshold = 0;
+    config.stop_threshold = 0;
+    config.silence_threshold = 0;
+
+    pcm = pcm_open(2, 0, PCM_IN, &config);
+    if (!pcm || !pcm_is_ready(pcm)) {
+        LOGI("Unable to open PCM device (%s)", pcm_get_error(pcm));
+        if (pcm) {
+            pcm_close(pcm);
+        }
+        return;
+    }
+    LOGD("pcm_open configure");
+    isRecording = true;
+
+    //创建一个独立的线程进行录音
+    std::thread([=]() {
+        int16_t buffer[1024 * config.channels];
+
+        // 打开输出文件，保存为二进制格式
+        std::ofstream outFile("/sdcard/recorded_audio.pcm", std::ios::binary);
+        if (!outFile.is_open()) {
+            LOGI("Failed to open output file");
+            isRecording = false;
+            return;
+        }
+
+        while (isRecording) {
+            if (pcm_read(pcm, buffer, sizeof(buffer)) < 0) {
+                LOGI("Failed to read audio data");
+                break;
+            }
+            // 将buffer写入文件
+            outFile.write(reinterpret_cast<char*>(buffer), sizeof(buffer));
+        }
+
+        // 关闭文件和PCM设备
+        outFile.close();
+        pcm_close(pcm);
+        pcm = nullptr;
+        isRecording = false;
+    }).detach();
 }
 

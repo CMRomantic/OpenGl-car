@@ -5,6 +5,7 @@ cmake_minimum_required(VERSION 3.10.2)
 
 set(libmic ${CMAKE_SOURCE_DIR}/libunimic)
 set(libname UnimicHalJNI)
+set(libtiny ${CMAKE_SOURCE_DIR}/libtinyalsa)
 
 include_directories(
         include
@@ -12,6 +13,13 @@ include_directories(
 )
 link_directories(
         ${libmic}/${ANDROID_ABI})
+
+include_directories(
+        include
+        ${libtiny}/include
+)
+link_directories(
+        ${libtiny}/${ANDROID_ABI})
 
 #include_directories(${CMAKE_SOURCE_DIR}/includes/)
 
@@ -28,6 +36,10 @@ set(uni_mic
 
         uni4michal)
 
+set(tiny
+
+        tinyalsa)
+
 set(native-libs
 
         android
@@ -43,4 +55,5 @@ target_link_libraries( # Specifies the target library.
         ${libname}
 
         ${uni_mic}
+        ${tiny}
         ${native-libs})
