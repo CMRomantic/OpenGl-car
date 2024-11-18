@@ -20,6 +20,9 @@ set(libname UnimicHalJNI)
 set(libtiny ${CMAKE_SOURCE_DIR}/tinyalsa)
 set(libssp  ${CMAKE_SOURCE_DIR}/ssp_hal)
 
+#定义 全局定义 UNI_ANDROID 宏
+add_definitions(-DUNI_ANDROID)
+
 #ssp_hal start
 include_directories(
         include

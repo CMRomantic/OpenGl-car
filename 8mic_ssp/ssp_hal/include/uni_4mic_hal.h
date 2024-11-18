@@ -7,13 +7,12 @@ extern "C" {
 
 
 #define UNUSED(_var)   (void)(_var)
-#define UNI_4MIC_VERSION    "UNI_4MIC_HAL_ANDROID_V1.1"
 
-/*#if defined(UNI_ANDROID)
+#if defined(UNI_ANDROID)
 #define UNI_4MIC_VERSION    "UNI_4MIC_HAL_ANDROID_V1.1"
 #else
-#error "OS platform not defined !"
-#endif*/
+#define UNI_4MIC_VERSION    "UNI_4MIC_HAL_ANDROID_V1.1"
+#endif
 
 
 /* DEBUG */

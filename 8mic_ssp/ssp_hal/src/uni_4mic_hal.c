@@ -1884,7 +1884,7 @@ void *uni_4mic_pcm_open(int ch_num) {
 
         HAL_PRINT_ERR("zxl-card=%d, device=%d, i2s_bits=%d RAW_CHAN_NUM=%d RAW_SAMPLE_RATE = %d\n",
                       card, device, i2s_bits, RAW_CHAN_NUM, RAW_SAMPLE_RATE);
-        hal->pcm = pcm_open(2, 0, PCM_IN, &pcm_config);
+        hal->pcm = pcm_open(card, device, PCM_IN, &pcm_config);
         HAL_PRINT_ERR("pcm open finished");
         if (NULL == hal->pcm || !pcm_is_ready(hal->pcm)) {
             // char error_info[1024] = {0};
