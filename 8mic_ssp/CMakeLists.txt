@@ -9,6 +9,10 @@ else()
     message(STATUS "Debug版本")
 endif()
 
+# 全局启用调试信息
+set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -g")
+set(CMAKE_C_FLAGS "${CMAKE_C_FLAGS} -g")
+
 #设置生成的so动态库最后输出的路径
 #设置bin和lib库目录
 #设置bin和lib库目录

@@ -107,9 +107,9 @@ int uni_4mic_debug_print(int level, const char *fmt, ...)
 
     buf[n] = 0;
 
-    if(HAL_DBG_MODE_PRINTF & s_debug_mode){
+    //if(HAL_DBG_MODE_PRINTF & s_debug_mode){
         printf("%s%s", s_debug_name, buf);
-    }
+    //}
 
 #if defined(UNI_ANDROID)
     // if(HAL_DBG_MODE_ALOGD & s_debug_mode){
