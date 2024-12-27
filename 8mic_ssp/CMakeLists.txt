@@ -26,6 +26,7 @@ set(libssp  ${CMAKE_SOURCE_DIR}/ssp_hal)
 
 #定义 全局定义 UNI_ANDROID 宏
 add_definitions(-DUNI_ANDROID)
+add_definitions(-DDEBUG)  # 启用调试日志
 
 #ssp_hal start
 include_directories(
