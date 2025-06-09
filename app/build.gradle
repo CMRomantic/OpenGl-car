@@ -50,7 +50,8 @@ android {
             //path file('../opengl/CMakeLists.txt')
             //path file('../rtmp/CMakeLists.txt')
             //path file('../8mic/CMakeLists.txt')
-            path file('../8mic_ssp/CMakeLists.txt')
+            //path file('../8mic_ssp/CMakeLists.txt')
+            path file('../wav/CMakeLists.txt')
             version '3.10.2'
         }
     }
