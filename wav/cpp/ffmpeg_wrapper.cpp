@@ -364,246 +364,59 @@ Java_com_unisound_musicpad_ffmpeg_FFmpegExecutor_cancelConversion(
     g_cancel = true;
 }
 
-// WAV 文件头结构
-struct WavHeader {
-    char riff[4];             // "RIFF"
-    uint32_t file_size;       // 文件总大小 - 8
-    char wave[4];             // "WAVE"
-    char fmt[4];              // "fmt "
-    uint32_t fmt_size;        // fmt chunk 大小 (16)
-    uint16_t audio_format;    // 1 = PCM
-    uint16_t channels;        // 声道数
-    uint32_t sample_rate;     // 采样率
-    uint32_t byte_rate;       // 每秒字节数
-    uint16_t block_align;     // 每个样本帧的字节数
-    uint16_t bits_per_sample; // 位深度
-    char data[4];             // "data"
-    uint32_t data_size;       // 音频数据大小
-};
-
-// 验证 WAV 文件头
-bool validate_wav_header(const WavHeader& header) {
-    return memcmp(header.riff, "RIFF", 4) == 0 &&
-           memcmp(header.wave, "WAVE", 4) == 0 &&
-           memcmp(header.fmt, "fmt ", 4) == 0 &&
-           memcmp(header.data, "data", 4) == 0 &&
-           header.audio_format == 1; // PCM
-}
-
-// 计算 WAV 文件时长（毫秒）
-int64_t calculate_wav_duration(const WavHeader& header) {
-    if (header.byte_rate == 0) return 0;
-    return (static_cast<int64_t>(header.data_size) * 1000) / header.byte_rate;
-}
-
 // 截取 WAV 文件前 30 秒
 int truncate_wav_file(const char* input_path, const char* output_path, int max_duration_ms) {
-    FILE* in_file = fopen(input_path, "rb");
-    if (!in_file) {
-        LOGE("Failed to open input WAV file: %s", input_path);
+    LOGD("input path: %s", input_path);
+    LOGD("output path: %s", output_path);
+    LOGD("duration: %d(s)", max_duration_ms);
+
+    AVFormatContext *in_fmt = nullptr;
+    if (avformat_open_input(&in_fmt, input_path, nullptr, nullptr) < 0) {
+        LOGE("Could not open input file");
         return -1;
     }
-
-    // 读取 RIFF 头
-    char riff[4];
-    uint32_t file_size;
-    char wave[4];
-
-    if (fread(riff, 1, 4, in_file) != 4 ||
-        fread(&file_size, 4, 1, in_file) != 1 ||
-        fread(wave, 1, 4, in_file) != 4) {
-        LOGE("Failed to read RIFF header");
-        fclose(in_file);
-        return -1;
+    if (avformat_find_stream_info(in_fmt, nullptr) < 0) {
+        LOGE("Could not find stream info");
+        return -2;
     }
 
-    if (memcmp(riff, "RIFF", 4) != 0 || memcmp(wave, "WAVE", 4) != 0) {
-        LOGE("Invalid RIFF/WAVE header");
-        fclose(in_file);
-        return -1;
+    av_dump_format(in_fmt, 0, input_path, 0);
+
+    AVFormatContext *out_fmt = nullptr;
+    avformat_alloc_output_context2(&out_fmt, nullptr, nullptr, output_path);
+
+    AVStream *in_stream = in_fmt->streams[0];
+    AVStream *out_stream = avformat_new_stream(out_fmt, nullptr);
+    avcodec_parameters_copy(out_stream->codecpar, in_stream->codecpar);
+
+    if (!(out_fmt->oformat->flags & AVFMT_NOFILE)) {
+        if (avio_open(&out_fmt->pb, output_path, AVIO_FLAG_WRITE) < 0) {
+            LOGE("Could not open output file");
+            return -3;
+        }
     }
+    avformat_write_header(out_fmt, nullptr);
 
-    // 查找 fmt 块
-    bool fmt_found = false;
-    uint16_t audio_format = 0;
-    uint16_t channels = 0;
-    uint32_t sample_rate = 0;
-    uint32_t byte_rate = 0;
-    uint16_t block_align = 0;
-    uint16_t bits_per_sample = 0;
-    uint32_t data_size = 0;
-    long data_start = 0;
-
-    while (!feof(in_file)) {
-        char chunk_id[4];
-        uint32_t chunk_size;
-
-        if (fread(chunk_id, 1, 4, in_file) != 4 ||
-            fread(&chunk_size, 4, 1, in_file) != 1) {
+    AVPacket pkt;
+    int64_t max_pts = max_duration_ms * AV_TIME_BASE;
+    while (av_read_frame(in_fmt, &pkt) >= 0) {
+        int64_t pts_time = av_rescale_q(pkt.pts, in_stream->time_base, AV_TIME_BASE_Q);
+        if (pts_time > max_pts) {
+            av_packet_unref(&pkt);
             break;
         }
-
-        // 处理 fmt 块
-        if (memcmp(chunk_id, "fmt ", 4) == 0) {
-            fmt_found = true;
-
-            // 读取 fmt 数据
-            if (fread(&audio_format, 2, 1, in_file) != 1 ||
-                fread(&channels, 2, 1, in_file) != 1 ||
-                fread(&sample_rate, 4, 1, in_file) != 1 ||
-                fread(&byte_rate, 4, 1, in_file) != 1 ||
-                fread(&block_align, 2, 1, in_file) != 1 ||
-                fread(&bits_per_sample, 2, 1, in_file) != 1) {
-                LOGE("Failed to read fmt chunk");
-                fclose(in_file);
-                return -1;
-            }
-
-            // 跳过剩余部分（可能包含额外信息）
-            if (chunk_size > 16) {
-                fseek(in_file, chunk_size - 16, SEEK_CUR);
-            }
-        }
-            // 处理 data 块
-        else if (memcmp(chunk_id, "data", 4) == 0) {
-            data_size = chunk_size;
-            data_start = ftell(in_file);
-            break;
-        }
-            // 跳过其他块
-        else {
-            LOGD("Skipping unknown chunk: %c%c%c%c (size: %u)",
-                 chunk_id[0], chunk_id[1], chunk_id[2], chunk_id[3], chunk_size);
-            fseek(in_file, chunk_size, SEEK_CUR);
-        }
+        pkt.stream_index = out_stream->index;
+        av_interleaved_write_frame(out_fmt, &pkt);
+        av_packet_unref(&pkt);
     }
 
-    if (!fmt_found) {
-        LOGE("fmt chunk not found");
-        fclose(in_file);
-        return -1;
+    av_write_trailer(out_fmt);
+    avformat_close_input(&in_fmt);
+    if (out_fmt && !(out_fmt->oformat->flags & AVFMT_NOFILE)) {
+        avio_closep(&out_fmt->pb);
     }
+    avformat_free_context(out_fmt);
 
-    if (data_size == 0) {
-        LOGE("data chunk not found");
-        fclose(in_file);
-        return -1;
-    }
-
-    // 验证格式
-    if (audio_format != 1) { // 1 = PCM
-        LOGE("Unsupported audio format: %d (only PCM supported)", audio_format);
-        fclose(in_file);
-        return -1;
-    }
-
-    if (bits_per_sample != 16) {
-        LOGE("Unsupported bits per sample: %d (only 16-bit supported)", bits_per_sample);
-        fclose(in_file);
-        return -1;
-    }
-
-    // 计算文件时长
-    if (byte_rate == 0) {
-        byte_rate = sample_rate * channels * bits_per_sample / 8;
-    }
-
-    int64_t duration_ms = (static_cast<int64_t>(data_size) * 1000) / byte_rate;
-    LOGD("WAV file info: %d Hz, %d ch, %d bit, duration: %lld ms",
-         sample_rate, channels, bits_per_sample, duration_ms);
-
-    // 计算目标数据大小
-    uint32_t target_data_size;
-    if (duration_ms <= max_duration_ms) {
-        target_data_size = data_size;
-    } else {
-        target_data_size = static_cast<uint32_t>(
-                (static_cast<int64_t>(byte_rate) * max_duration_ms / 1000)
-        );
-        // 确保大小是块对齐的倍数
-        target_data_size = (target_data_size / block_align) * block_align;
-    }
-
-    LOGD("Original data size: %u, target data size: %u", data_size, target_data_size);
-
-    // 打开输出文件
-    FILE* out_file = fopen(output_path, "wb");
-    if (!out_file) {
-        LOGE("Failed to open output WAV file: %s", output_path);
-        fclose(in_file);
-        return -1;
-    }
-
-    // 重置输入文件指针到开头
-    fseek(in_file, 0, SEEK_SET);
-
-    // 复制整个文件头（直到data块开始）
-    long header_end = data_start - 8; // 减去chunk_id和size
-    fseek(in_file, 0, SEEK_SET);
-    char header_buffer[4096];
-    size_t header_size = header_end;
-    size_t bytes_read;
-
-    while (header_size > 0 &&
-           (bytes_read = fread(header_buffer, 1,
-                               header_size < sizeof(header_buffer) ? header_size : sizeof(header_buffer),
-                               in_file)) > 0) {
-
-        if (fwrite(header_buffer, 1, bytes_read, out_file) != bytes_read) {
-            LOGE("Failed to write header data");
-            fclose(in_file);
-            fclose(out_file);
-            return -1;
-        }
-
-        header_size -= bytes_read;
-    }
-
-    // 更新data块大小
-    fseek(out_file, -4, SEEK_CUR); // 回到data_size位置
-    fwrite(&target_data_size, 4, 1, out_file);
-
-    // 更新文件总大小（RIFF块大小）
-    uint32_t new_file_size = header_end + 8 + target_data_size; // header + data头 + data体
-    fseek(out_file, 4, SEEK_SET); // 回到RIFF size位置
-    fwrite(&new_file_size, 4, 1, out_file);
-
-    // 定位到音频数据开始位置
-    fseek(in_file, data_start, SEEK_SET);
-
-    // 复制音频数据
-    uint8_t buffer[4096];
-    uint32_t bytes_remaining = target_data_size;
-
-    while (bytes_remaining > 0 &&
-           (bytes_read = fread(buffer, 1,
-                               bytes_remaining < sizeof(buffer) ? bytes_remaining : sizeof(buffer),
-                               in_file)) > 0) {
-
-        if (fwrite(buffer, 1, bytes_read, out_file) != bytes_read) {
-            LOGE("Failed to write audio data");
-            fclose(in_file);
-            fclose(out_file);
-            return -1;
-        }
-
-        bytes_remaining -= bytes_read;
-
-        // 更新进度 (0-100)
-        pthread_mutex_lock(&g_mutex);
-        g_progress = 100 - (bytes_remaining * 100 / target_data_size);
-        pthread_mutex_unlock(&g_mutex);
-
-        if (g_cancel) {
-            LOGD("Truncation cancelled by user");
-            fclose(in_file);
-            fclose(out_file);
-            return -2;
-        }
-    }
-
-    fclose(in_file);
-    fclose(out_file);
     return 0;
 }
 
@@ -624,6 +437,7 @@ Java_com_unisound_musicpad_ffmpeg_FFmpegExecutor_truncateWavFile(
 
     // 执行截取操作
     int ret = truncate_wav_file(input_path, output_path, max_duration_ms);
+    LOGD("truncate wav finished.");
 
     env->ReleaseStringUTFChars(input_jstr, input_path);
     env->ReleaseStringUTFChars(output_jstr, output_path);
